@@ -138,12 +138,12 @@ class TeamHandler(BaseHandler):
             project = self.get_project_object(project_id=None,
                                               permalink=project_permalink)
 
-        self.project = project
-        self.clean_request(project)
-
         if not self.check_permission(project, 'can_add_member'):
             raise HTTPError(403,
                 reason="Not permitted to add members to this project")
+        
+        self.project = project
+        self.clean_request(project)
         response = {}
         response['members'] = []
         for each in self.data['members']:
