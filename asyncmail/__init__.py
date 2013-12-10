@@ -8,7 +8,8 @@ import sys
 from tornado.web import RequestHandler
 sys.dont_write_bytecode = True
 
-from tornadomail.message import EmailMessage, EmailMultiAlternatives
+from tornadomail.message import EmailMessage, EmailMultiAlternatives,\
+    EmailFromTemplate
 from requires.settings import ClearSoupApp
 
 
@@ -30,6 +31,10 @@ class AsycnEmail(ClearSoupApp):
         self._message = 'Mr. ' + user.username + '\n'
         self._message = self._message.join(['', 'Thanks\n Team Clearsoup'])
 
+    def generate_invite_content(self, message=None):
+        self._subject = "You are invited to join Clearsoup"
+        self._message = message
+    
     def generate_new_account_content(self):
         '''
         Generate subject and message body when user is signing up for the
@@ -43,7 +48,7 @@ class AsycnEmail(ClearSoupApp):
             message = EmailMessage(
                 self._subject,
                 self._message,
-                'clearsoup.imaginea@gmail.com',
+                'No-Reply@clearsoup.in',
                 [email],
                 connection=self.mail_connection
             )
