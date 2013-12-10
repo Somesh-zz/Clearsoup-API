@@ -5,6 +5,7 @@ sys.dont_write_bytecode = True
 from tornado.web import Application, os, StaticFileHandler
 from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
+from tornado import template
 
 # from tornadomail.message import EmailMessage, EmailMultiAlternatives
 from tornadomail.backends.smtp import EmailBackend
@@ -20,9 +21,11 @@ class ClearSoupApp(Application, object):
     def mail_connection(self):
         return EmailBackend(
             'smtp.gmail.com', 587,
-            'clearsoup.imaginea@gmail.com',
-            'clearsoup_imaginea',
-            True
+            'No-Reply@clearsoup.in',
+            'noreply@123',
+            True,
+            template_loader=template.Loader('.')
+            
         )
 
 # Use this lambda to generate absolute path for template/static.
@@ -37,6 +40,8 @@ SETTINGS = {
     'cookie': 'token',  # Specify the cookie variable name
     'login_url': '/api/authenticate/',  # Login path for the application
     'cookie_secret': '$2a$12$/Afye1F0vhEK.EPm0xYLdebypPjz0tnI.iiYhpIUMmCjCnsBwNd/6',
+    'template_path': GEN_PATH('templates'),
+    'static_path': GEN_PATH('assets'),
     # Templating
     'debug': True,  # Retain debug True for development.
     # App options
