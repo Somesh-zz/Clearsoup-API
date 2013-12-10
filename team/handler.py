@@ -6,7 +6,9 @@ Created on 16-Aug-2013
 
 import ast
 from tornado.web import HTTPError
+from tornado import template
 from requires.base import BaseHandler, authenticated
+from asyncmail import AsycnEmail
 from datamodels.project import Project
 from datamodels.user import User
 from datamodels.team import Team, Invitation
@@ -14,7 +16,7 @@ from mongoengine.errors import ValidationError
 from utils.dumpers import json_dumper
 from datamodels.permission import Role
 import json
-from requires.settings import PROJECT_PERMISSIONS
+from requires.settings import PROJECT_PERMISSIONS, SETTINGS
 
 
 class TeamHandler(BaseHandler):
@@ -74,6 +76,14 @@ class TeamHandler(BaseHandler):
             invited_by=self.current_user,
             role=role)
         invitation.save()
+        loader = template.Loader(SETTINGS['template_path'])
+        async_email = AsycnEmail(self.request)
+        message = loader.load('invite_mailtemplate.html').generate(
+                      project_name= invitation.project.title,
+                      project_owner= invitation.project.created_by.username,
+                      code= invitation.code)
+        async_email.generate_invite_content(message=message.strip())
+        async_email.send_email(email=invitation.email)
         return json_dumper(invitation)
 
     def get_project_object(self, project_id=None, permalink=None):
@@ -117,9 +127,14 @@ class TeamHandler(BaseHandler):
         project = self.get_project_object(project_id=project_id,
                                           permalink=None)
         self.project = project
+        response = {}
         members = list(Team.objects.filter(project=project).exclude("project",
                                                     "created_by", "updated_by"))
-        self.write(json.dumps(json_dumper(members)))
+        invited_members = list(Invitation.objects.filter(project=project
+                                             ).exclude('invited_by', 'role'))
+        response['members'] = json_dumper(members)
+        response['invited_members'] = json_dumper(invited_members)
+        self.write(json.dumps(response))
 
     @authenticated
     def post(self, *args, **kwargs):
