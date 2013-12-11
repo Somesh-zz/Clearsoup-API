@@ -31,10 +31,9 @@ class AsycnEmail(ClearSoupApp):
         self._message = 'Mr. ' + user.username + '\n'
         self._message = self._message.join(['', 'Thanks\n Team Clearsoup'])
 
-    def generate_invite_content(self, message=None):
-        self._subject = "You are invited to join Clearsoup"
-        self._message = message
-    
+    def generate_subject_content(self, subject):
+        self._subject = subject
+
     def generate_new_account_content(self):
         '''
         Generate subject and message body when user is signing up for the
@@ -43,8 +42,18 @@ class AsycnEmail(ClearSoupApp):
         self._subject = ''
         self._message = ''
     
-    def send_email(self, email):
-        try:
+    def send_email(self, email=None, params=None, template=None):
+        if params and template:
+            message = EmailFromTemplate(
+                        self._subject,
+                        template,
+                        params=params,
+                        from_email='No-Reply@clearsoup.in',
+                        to=[email],
+                        reply_to='info@clearsoup.in',
+                        connection=self.mail_connection
+                    )
+        else:
             message = EmailMessage(
                 self._subject,
                 self._message,
@@ -52,6 +61,7 @@ class AsycnEmail(ClearSoupApp):
                 [email],
                 connection=self.mail_connection
             )
+        try:
             message.send()
         except Exception, e:
             print e
