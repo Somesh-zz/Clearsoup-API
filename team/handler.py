@@ -76,14 +76,14 @@ class TeamHandler(BaseHandler):
             invited_by=self.current_user,
             role=role)
         invitation.save()
-        loader = template.Loader(SETTINGS['template_path'])
         async_email = AsycnEmail(self.request)
-        message = loader.load('invite_mailtemplate.html').generate(
-                      project_name= invitation.project.title,
-                      project_owner= invitation.project.created_by.username,
-                      code= invitation.code)
-        async_email.generate_invite_content(message=message.strip())
-        async_email.send_email(email=invitation.email)
+        template = SETTINGS['template_path']+'/'+'invite_mailtemplate.html'
+        params={'project_name': invitation.project.title,
+                'project_owner': invitation.project.created_by.username,
+                'code':  invitation.code}
+        async_email.generate_subject_content(subject='Welcome to Clearsoup.')
+        async_email.send_email(
+           email=invitation.email, template=template, params=params)
         return json_dumper(invitation)
 
     def get_project_object(self, project_id=None, permalink=None):
