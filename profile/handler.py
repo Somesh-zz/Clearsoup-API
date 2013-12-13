@@ -12,22 +12,23 @@ from datamodels.userprofile import UserProfile
 from datamodels.session import SessionManager
 from mongoengine.errors import NotUniqueError
 from datetime import datetime as dt
-
+from asyncmail import AsycnEmail
+from requires.settings import SETTINGS
 
 class ProfileHandler(BaseHandler):
-    
+
     SUPPORTED_METHODS = ('GET', 'POST',)
     REQUIRED_FIELDS   = {
         'POST': ('username', ),
         'GET': ('username', )
         }
     data = {}
-    
+
     def clean_request(self):
         '''
             function to remove additional data key send in request.
             e.g token
-            
+
             Besides above, it also cleans the date-time values and duration
         '''
         session_user = None
@@ -53,7 +54,7 @@ class ProfileHandler(BaseHandler):
             self.finish(response)
         except User.DoesNotExist:
             raise HTTPError(404, **{'reason': "User not found"})
-        
+
 
 
     @authenticated
@@ -110,23 +111,48 @@ class ResetPasswordHandler(BaseHandler, object):
 
     def put(self, *args, **kwargs):
         """HTTP PUT request handler method for ResetPasswordHandler"""
-        if not (len(self.data.keys()) == 1 and self.data.get(
-                'email')):
+
+        def send_email(user, reset_token):
+            # Send email
+            async_mail = AsycnEmail(self.request)
+            template = SETTINGS['template_path'] + '/' + 'reset_password.html'
+            params={
+                'username': user.username,
+                'reset_url': 'http://www.clearsoup.in/reset-password/' + reset_token.token
+            }
+            async_mail.generate_subject_content(subject='Reset your Clearsoup password')
+            async_mail.send_email(
+                email=user.email,
+                template=template,
+                params=params
+            )
+
+        if not self.get_argument('email', None):
             self.send_error(400)
-        user = User.objects.filter(email=self.data.get('email'))
+        user = User.objects.filter(email=self.get_argument('email'))
         user = user[0] if user.count() == 1 else None
         if user:
             try:
-                token = PasswordResetToken(user=user)
-                token.save()
-                self.write(token.to_json())
+                reset_token = PasswordResetToken(user=user)
+                reset_token.save()
+                send_email(user, reset_token)
+                self.write({
+                    'success': True
+                    })
             except NotUniqueError:
                 token = PasswordResetToken.objects.filter(user=user)
                 if token.count() == 1:
                     token[0].reset_token()
-                    self.write(token[0].to_json())
+                    send_email(user, token[0])
+                    self.write({
+                        'success': True
+                        })
                 else:
                     self.send_error(400)
                     return
+            except Exception:
+                self.write({
+                    'success': False
+                    })
         else:
-            self.write({})
+            self.send_error(404)
