@@ -124,7 +124,8 @@ class ResetPasswordHandler(BaseHandler, object):
             async_mail.send_email(
                 email=user.email,
                 template=template,
-                params=params
+                params=params,
+                from_email=SETTINGS['no-reply_email']
             )
 
         if not self.get_argument('email', None):
@@ -139,7 +140,7 @@ class ResetPasswordHandler(BaseHandler, object):
                 self.write({
                     'success': True
                     })
-            except NotUniqueError:
+            except NotUniqueError, e:
                 token = PasswordResetToken.objects.filter(user=user)
                 if token.count() == 1:
                     token[0].reset_token()
@@ -150,7 +151,7 @@ class ResetPasswordHandler(BaseHandler, object):
                 else:
                     self.send_error(400)
                     return
-            except Exception:
+            except Exception, e:
                 self.write({
                     'success': False
                     })
