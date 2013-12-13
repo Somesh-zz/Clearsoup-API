@@ -34,7 +34,7 @@ GEN_PATH = lambda path: os.path.join(os.getcwd(), path)
 SETTINGS = {
     'APPS': ['invitation', 'profile','project', 'story','auth', 'core', 'user', 'team',
              'permission', 'sprint', 'update', 'task', 'search', 'websocket',
-             'admin',
+             'admin', 'feedback'
             ],
     # Security
     'cookie': 'token',  # Specify the cookie variable name
@@ -50,7 +50,9 @@ SETTINGS = {
     'api_root': 'http://localhost:9000/api/',
     'web_root': 'http://www.clearsoup.in/',
     'models_package': 'datamodels',
-    'default_avatar': 'http://www.clearsoup.in/assets/images/avatar.png'
+    'default_avatar': 'http://www.clearsoup.in/assets/images/avatar.png',
+    'no-reply_email': 'No-Reply@clearsoup.in',
+    'feedback_email': 'info@clearsoup.in',
 }
 
 PROJECT_PERMISSIONS = ('can_add_story', 'can_edit_story', 'can_delete_story',
