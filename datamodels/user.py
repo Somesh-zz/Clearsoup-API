@@ -68,7 +68,7 @@ class User(me.Document):
 
     def to_json(self, fields=None, exclude=None):
         return json_dumper(self, fields, exclude)
-    
+
     def clean(self):
         if len(User.objects.filter(username=self.username)) > 0:
             raise ValidationError('Username already exists')

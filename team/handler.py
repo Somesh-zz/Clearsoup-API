@@ -20,7 +20,7 @@ from requires.settings import PROJECT_PERMISSIONS, SETTINGS
 
 
 class TeamHandler(BaseHandler):
-       
+
     SUPPORTED_METHODS = ('GET', 'POST', 'DELETE')
     REQUIRED_FIELDS = {
         'POST': ('data',),
@@ -47,7 +47,7 @@ class TeamHandler(BaseHandler):
         '''
             function to remove additional data key send in request.
             e.g token
-            
+
             Besides above, it also cleans the date-time values and duration
         '''
         self.data['members'] = []
@@ -157,7 +157,7 @@ class TeamHandler(BaseHandler):
         if not self.check_permission(project, 'can_add_member'):
             raise HTTPError(403,
                 reason="Not permitted to add members to this project")
-        
+
         self.project = project
         self.clean_request(project)
         response = {}
@@ -214,7 +214,7 @@ class TeamHandler(BaseHandler):
         existing_members = project.members
         [Team.objects.filter(user=each,project=project).delete()
          for each in self.data['members']]
-        [existing_members.pop(existing_members.index(each)) for each in 
+        [existing_members.pop(existing_members.index(each)) for each in
          self.data['members']]
         project.update(set__members=existing_members)
         self.write(project.to_json())

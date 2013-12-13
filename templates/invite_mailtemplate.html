@@ -1,22 +1,25 @@
 {% autoescape None %}
 
-<html>
-	<title>
-	    <head>Clearsoup invitation</head>
-    </title>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
+	<head>
+	    <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+    	<meta name="viewport" content="width=device-width, initial-scale=1">
+    	<title>Clearsoup invitation</title>
+    </head>
     <body>
         <p>
 			Hi there!
-			
+
 			{{ project_owner }} has added you to the project {{ project_name }} on Clearsoup, a simple project tracking tool. Since you don't seem to have a Clearsoup account, please <a href="www.clearsoup.in/signup/?code={{ code }}">sign up for an account</a> to get started.
-			
+
 			If you are having trouble clicking on the link, copy and paste the following link in your browser:
-			
+
 			www.clearsoup.in/signup/?code={{ code }}
-			
+
 			For any help or feedback, reach us at info@clearsoup.in.
-			
+
 			Note: Please ignore this email if you are not the intended recipient.
-			</p>
+		</p>
 	</body>
 </html>

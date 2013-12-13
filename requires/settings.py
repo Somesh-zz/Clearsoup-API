@@ -25,7 +25,7 @@ class ClearSoupApp(Application, object):
             'noreply@123',
             True,
             template_loader=template.Loader('.')
-            
+
         )
 
 # Use this lambda to generate absolute path for template/static.
