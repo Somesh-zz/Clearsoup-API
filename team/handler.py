@@ -133,7 +133,7 @@ class TeamHandler(BaseHandler):
         members = list(Team.objects.filter(project=project).exclude("project",
                                                     "created_by", "updated_by"))
         invited_members = list(Invitation.objects.filter(project=project
-                                             ).exclude('invited_by', 'role'))
+                                             ).exclude('invited_by', 'project'))
         response['members'] = json_dumper(members)
         response['invited_members'] = json_dumper(invited_members)
         self.write(json.dumps(response))
