@@ -71,13 +71,13 @@ class Invitation(me.Document):
     """Invitation data model"""
 
     email = me.EmailField(required=True)
-    project = me.ReferenceField('Project', required=True)
+    project = me.ReferenceField('Project', required=True, dbref=True)
 
     created_at = me.DateTimeField(default=dt.utcnow())
     valid_until = me.DateTimeField(default=td(days=1) + dt.utcnow())
     invited_by = me.ReferenceField('User', required=True)
     code = me.StringField()
-    role = me.ReferenceField('Role', required=True)
+    role = me.ReferenceField('Role', required=True, dbref=True)
 
     def save(self, *args, **kwargs):
         """
