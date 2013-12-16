@@ -42,7 +42,8 @@ class AsycnEmail(ClearSoupApp):
         self._subject = ''
         self._message = ''
     
-    def send_email(self, email=None, template=None, params=None, from_email=None):
+    def send_email(self, email=None, template=None, params=None,
+                   from_email=None, reply_to=None):
         if params and template:
             message = EmailFromTemplate(
                         self._subject,
@@ -50,7 +51,7 @@ class AsycnEmail(ClearSoupApp):
                         params=params,
                         from_email=from_email,
                         to=[email],
-                        reply_to='info@clearsoup.in',
+                        reply_to=reply_to,
                         connection=self.mail_connection
                     )
         else:
