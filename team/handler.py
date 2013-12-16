@@ -84,7 +84,8 @@ class TeamHandler(BaseHandler):
         async_email.generate_subject_content(subject='Welcome to Clearsoup.')
         async_email.send_email(
            email=invitation.email, template=template, params=params,
-           from_email=SETTINGS['no-reply_email'])
+           from_email=SETTINGS['no-reply_email'],
+           reply_to=SETTINGS['feedback_email'])
         return json_dumper(invitation)
 
     def get_project_object(self, project_id=None, permalink=None):

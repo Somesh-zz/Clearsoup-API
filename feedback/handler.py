@@ -30,7 +30,8 @@ class FeedbackHandler(BaseHandler):
         async_email.send_email(email=SETTINGS['feedback_email'],
                                template=template,
                                params=params,
-                               from_email=self.current_user.email)
+                               from_email=self.current_user.email,
+                               reply_to=self.current_user.email)
         response = {'status': 200,
                     'message': 'Feedback submitted successfully'
                     }
