@@ -85,10 +85,11 @@ class ResetPasswordHandler(BaseHandler, object):
 
     def post(self, *args, **kwargs):
         response = {}
-        if 'password' in self.data.iterkeys() \
-                and 'token' in self.data.iterkeys():
+        password = self.get_argument('password', None)
+        reset_code = self.get_argument('token', None)
+        if password and reset_code:
             token = PasswordResetToken.objects.filter(
-                token=self.data.get('token'),
+                token=reset_code,
                 valid_until__gt=dt.utcnow())
             if token.count() == 1:
                 self.current_user = token[0].user
