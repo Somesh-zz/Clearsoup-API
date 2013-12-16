@@ -11,7 +11,7 @@ from asyncmail import AsycnEmail
 from requires.settings import SETTINGS
 
 class FeedbackHandler(BaseHandler):
-       
+
     SUPPORTED_METHODS = ('POST',)
     REQUIRED_FIELDS = {
         'POST': ('message',),
@@ -22,7 +22,7 @@ class FeedbackHandler(BaseHandler):
         if not self.get_argument('message'):
             self.send_error(404)
         async_email = AsycnEmail(self.request)
-        template = SETTINGS['template_path']+'/'+'feedback_mailtemplate.html'
+        template = SETTINGS['template_path']+'/'+'feedback.html'
         params={'message': self.get_argument('message'),
                 'user': self.current_user.username}
         async_email.generate_subject_content(
