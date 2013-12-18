@@ -78,7 +78,8 @@ class Update(me.Document):
     created_at = me.DateTimeField(default=datetime.utcnow())
 
     # Fields
-    project = me.ReferenceField('Project', required=True, dbref=True)
+    project = me.ReferenceField('Project', required=True, dbref=True, 
+                                reverse_delete_rule=me.CASCADE)
     text = me.StringField(max_length=140, required=True)
     mentions = me.ListField(required=False)
     hashtags = me.ListField(required=False)
