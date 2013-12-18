@@ -32,7 +32,7 @@ class BaseHandler(tornado.web.RequestHandler):
         store it as self.data for passing directly to models if required
         """
         method = self.request.method
-        if ((method == 'PUT' or method == 'POST') and
+        if ((method == 'PUT' or method == 'POST' or method == 'DELETE') and
                 self.request.headers.get("Content-Type") == "application/json" and
                 self.request.body is not None and
                 self.request.body.strip()):
