@@ -4,14 +4,13 @@ Created on 16-Aug-2013
 @author: someshs
 '''
 
-import ast
 from tornado.web import HTTPError
-from tornado import template
 from requires.base import BaseHandler, authenticated
 from asyncmail import AsycnEmail
 from datamodels.project import Project
-from datamodels.user import User
 from datamodels.team import Team, Invitation
+from datamodels.user import User
+from datamodels.update import Update
 from mongoengine.errors import ValidationError
 from utils.dumpers import json_dumper
 from datamodels.permission import Role
@@ -24,7 +23,7 @@ class TeamHandler(BaseHandler):
     SUPPORTED_METHODS = ('GET', 'POST', 'DELETE')
     REQUIRED_FIELDS = {
         'POST': ('data',),
-        'DELETE' : ('usernames', 'projectId'),
+#        'DELETE' : ('data',),
         }
     data = {}
 
@@ -123,6 +122,21 @@ class TeamHandler(BaseHandler):
             msg = 'Not permitted to perform this action'
             raise HTTPError(500, **{'reason':msg})
 
+    def send_notification(self,  invited_user=None):
+        '''
+        Send notification to those who are already on clearsoup.
+        '''
+        update = Update()
+        update.created_by = self.current_user
+        update.project = self.project
+        text = '@%s is invited to join %s' % (invited_user.username,
+                                              self.project.title)
+        update.text = text
+        try:
+            update.save()
+        except ValidationError, error:
+            raise HTTPError(500, **{'reason':self.error_message(error)})
+
     @authenticated
     def get(self,*args, **kwargs):
         project_id = self.get_argument('projectId', None)
@@ -181,19 +195,20 @@ class TeamHandler(BaseHandler):
 #            exclude = ['udpated_at', 'updated_by', 'created_at', 'created_by']
             if new_user:
                 response['members'].append(new_user.to_json())
+                self.send_notification(invited_user=new_user.user)
             elif existing_user:
                 response['members'].append(existing_user.to_json())
+                self.send_notification(invited_user=existing_user.user)
         response.update({'invitations': self.invitations})
         self.write(json_dumper(response))
 
     def clean_delete_request(self):
         self.data['members'] = []
-        self.data['new_members'] = []
         for each in self.data['data']:
+            
             try:
                 user = User.objects.get(email=each['email'])
-                self.data['members'].append({'user': user})
-                self.data['new_members'].append(user)
+                self.data['members'].append(user)
             except User.DoesNotExist:
                 raise HTTPError(404, **{'reason': each['email'] + ' not found '})
 
@@ -213,11 +228,14 @@ class TeamHandler(BaseHandler):
                 reason="Not permitted to delete members of this project")
         self.clean_delete_request()
         existing_members = project.members
-        [Team.objects.filter(user=each,project=project).delete()
-         for each in self.data['members']]
-        [existing_members.pop(existing_members.index(each)) for each in
-         self.data['members']]
-        project.update(set__members=existing_members)
-        self.write(project.to_json())
+        if len(existing_members) > 1:
+            [Team.objects.filter(user=each,project=project).delete()
+             for each in self.data['members']]
+            [existing_members.pop(existing_members.index(i)) for i in
+             self.data['members']]
+            project.update(set__members=existing_members)
+            self.write(project.to_json())
+        else:
+            self.write({'message': "Only one member in the project. It can't be deleted"})
 
 
