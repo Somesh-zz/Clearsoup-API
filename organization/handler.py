@@ -12,6 +12,7 @@ from datamodels.permission import OrganizationPermission
 from datamodels.user import User
 from mongoengine.errors import ValidationError
 from utils.dumpers import json_dumper
+from requires.settings import organization_permission_map
 
 sys.dont_write_bytecode = True
 
@@ -26,6 +27,7 @@ class OrganizationHandler(BaseHandler):
         super(OrganizationHandler, self).__init__(*args, **kwargs)
 
     def clean_request(self):
+        print self.data
         self.data.update({'created_by': self.current_user,
                          'updated_by': self.current_user,
                          'admin': self.current_user})
@@ -59,21 +61,22 @@ class OrganizationHandler(BaseHandler):
 #        else:
 #            OrganizationProfile(**self.data)
 
-    def set_org_permission(self, org):
+    def set_org_permission(self, org=None, role=None):
         p = OrganizationPermission(organization=org,
                           user=self.current_user,
-                          map=63)
+                          map=organization_permission_map[role])
         p.save()
 
     @authenticated
     def put(self, *args, **kwargs):
         self.clean_request()
+        print somesh
         org = Organization(**self.data)
         try:
             org.save(validate=True, clean=True)
             self.current_user.update_organization_list(org)
             self.write(org.to_json())
-            self.set_org_permission(org)
+            self.set_org_permission(org=None, role='super_admin')
             OrganizationProfile.objects.create(organization=org,
                                                created_by=self.current_user,
                                                updated_by=self.current_user)
