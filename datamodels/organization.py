@@ -13,6 +13,7 @@ import mongoengine as me
 from utils.dumpers import json_dumper
 NAME_REGX = '^[a-zA-Z0-9_\s]*$'
 
+
 class Organization(me.Document):
     name = me.StringField(required=True, max_length=30, unique=True,
                           regex=NAME_REGX)
@@ -78,7 +79,8 @@ class OrganizationProfile(me.Document):
                                      unique=True, reverse_delete_rule=True)
     url = me.URLField()
     location = me.StringField()
-    logo = me.ImageField()
+    logo = me.URLField()
+    contact_number = me.StringField()
     
     created_at = me.DateTimeField(default=datetime.utcnow)
     updated_at = me.DateTimeField(default=datetime.utcnow)
