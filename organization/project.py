@@ -50,6 +50,7 @@ class OrgProjectHandler(BaseHandler):
                 raise HTTPError(404, **{'reason': self.error_message(error)})
             return org
 
+
     def set_user_permission(self, project):
         p = ProjectPermission(project=project,
                           user=self.current_user,
@@ -61,18 +62,63 @@ class OrgProjectHandler(BaseHandler):
         organization = kwargs.get('organization', None)
         org = self.validate_request(organization)
         response = None
-        project_id = self.get_argument('projectId', None)
-        if not project_id:
-            projects = Project.objects.filter(organization=org,
-                                          is_active=True)
-            response = json_dumper(projects)
-        elif project_id:
+        sequence = self.get_argument('projectId', None)
+        owner = self.get_argument('owner', None)
+        project_name = self.get_argument('project_name', None)
+        
+        # By Sequence number
+        if sequence:
             try:
-                project = Project.get_project_object(sequence=project_id,
+                project = Project.get_project_object(sequence=sequence,
                                                      organization=org)
-                response = project.to_json()
+                if self.current_user in project.members:
+                    response['project'] = project.to_json()
+                    response['project'].update({
+                        'current_sprint' : project.get_current_sprint().to_json()
+                    })
+                else:
+                    raise HTTPError(404, **{'reason': "Project Not found."})
             except ValidationError, error:
                 raise HTTPError(404, **{'reason': self.error_message(error)})
+        
+        # By permalink
+        elif owner and project_name:
+            permalink = owner + '/' + project_name
+            try:
+                project = Project.objects.get(
+                            permalink__iexact=permalink,
+                            members=self.current_user,
+                            organization=org,
+                            is_active=True
+                        )
+                if not project:
+                    raise HTTPError(404)
+                
+                if not self.current_user in project.members:
+                    raise HTTPError(403)
+            
+                response['project'] = project.to_json()
+                response['project'].update({
+                    'current_sprint' : project.get_current_sprint().to_json()
+                })
+            except Project.DoesNotExist:
+                raise HTTPError(404)
+        else:
+            # Check if we are returning a list of projects for
+            # the logged in user
+            projects = Project.objects(members=self.current_user,
+                                       organization=org
+                                       ).order_by('created_on')
+            response['projects'] = []
+            for p in projects:
+                response['projects'].append(p.to_json())
+                response['projects'][-1].update({
+                    'current_sprint': p.get_current_sprint().to_json()
+                })
+        
+        self.finish(json.dumps(response))
+
+
         if not self._headers_written:
             self.write(json.dumps(response))
     
