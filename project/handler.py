@@ -140,7 +140,9 @@ class ProjectHandler(BaseHandler):
         project_name = self.get_argument('project_name', None)
         project_permalink = self.get_argument('project_pemalink', None)
         roles = self.get_arguments('roles', None)
+        extended_date = self.get_argument('extended_date', None)
         project = None
+
         if project_id:
             project = self.get_valid_project(project_id)
         elif owner and project_name:
@@ -151,13 +153,15 @@ class ProjectHandler(BaseHandler):
                                              permalink=project_permalink)
         else:
             self.send_error(400)
-        response = {}
         if roles:
             new_roles = [role for role in roles if role not in project.roles]
             Role.create_role_map(new_roles, project, self.current_user,
                                  map=0)
             project.roles.extend(roles)
             project.update(set__roles=set(list(project.roles)))
+        if extended_date and project.is_todo:
+            extended_date = millisecondToDatetime(extended_date)
+            project.update(set__end_date=extended_date)
         self.write(project.to_json())
 
     def create_role(self, project, creating_project):
