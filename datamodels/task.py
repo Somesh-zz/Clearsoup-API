@@ -38,13 +38,14 @@ states = {
     'review': {
         'initial': 'New',
         'events': [
-            { 'name': 'assign', 'src': 'New', 'dst': 'Pending' },
-            { 'name': 'start', 'src': 'Pending', 'dst': 'InProgress' },
-            { 'name': 'submitForReview', 'src': 'InProgress', 'dst': 'ForReview', 'action': {'method': 'create', 'entity': 'Task', 'args':{'type': 'Review'} } },
+            { 'name': 'assign', 'src': ['New', 'Reopened','Assigned','InProgress'], 'dst': 'Assigned' },
+            { 'name': 'start', 'src': ['New', 'Assigned', 'Reopened'], 'dst': 'InProgress' },
+            { 'name': 'submitforreview', 'src': 'InProgress', 'dst': 'ForReview' },
             { 'name': 'reviewPass', 'src': 'ForReview', 'dst': 'Reviewed' },
             { 'name': 'reviewFail', 'src': 'ForReview', 'dst': 'ReviewFail' },
             { 'name': 'fix', 'src': 'ReviewFail', 'dst': 'Fixed' },
-            { 'name': 'close', 'src': ['InProgress','Reviewed','Fixed'], 'dst': 'Closed' }
+            { 'name': 'close', 'src': ['InProgress','Reviewed','Fixed'], 'dst': 'Closed' },
+            { 'name': 'reopen', 'src': 'Closed', 'dst': 'Reopened' },
         ]
     }
 }
@@ -154,7 +155,10 @@ class Task(me.Document):
     @property
     def state_machine(self):
         if not hasattr(self, "_state_machine"):
-            self._state_machine = Fysom(states['default'])
+            if self.task_type == 'Review':
+                self._state_machine = Fysom(states['review'])
+            else:
+                self._state_machine = Fysom(states['default'])
             # We probably need to store sm.current (which is the current state)
             # and/or current_state index in the db so that when we initialize
             # the object, we just have to set it to the current_state
